@@ -1,0 +1,14 @@
+/* src/index.css */
+/* src/index.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+body {
+    margin: 0;
+    padding: 0;
+}
+
+
+/* Add more styles as needed */
