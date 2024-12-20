@@ -142,7 +142,7 @@ export default {
     // Calculate the total cost of the cart using Pinia store
     total() {
       const cartStore = useCartStore();
-      return cartStore.cartItems.reduce((acc, item) => acc + parseFloat(item.price) * item.quantity, 0);
+      return cartStore.cartItems.reduce((acc, item) => acc + parseFloat(item.price) , 0);
     },
     isCheckoutEnabled() {
       const cartStore = useCartStore();
@@ -187,7 +187,7 @@ export default {
             const cartStore = useCartStore();
             cartStore.setCartData(response.data.data.map(item => ({
               ...item,
-              quantity: 1,
+              // quantity: 1,
             })));
 
             console.log('Cart data fetched successfully:', cartStore.cartItems);

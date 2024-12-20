@@ -124,7 +124,7 @@
                         <!-- Quantity Column -->
                         <div
                             class="col-span-2 md:text-lg lg:text-lg sm:text-base text-[12px] nunito-sans-light text-gray-700 text-center">
-                            {{ item.quantity }} {{ item.unit || 'pcs' }}
+                            {{ item.quantity }} {{ item.unit || 'Bottle' }}
                         </div>
 
                         <!-- Price Column -->
@@ -251,12 +251,14 @@ export default {
         // Calculate the total amount for cart (in cents, as Stripe requires the smallest currency unit)
         totalAmount() {
             const cartStore = useCartStore();
-            return cartStore.cartItems.reduce((acc, item) => acc + parseFloat(item.price) * item.quantity, 0) ; // Convert to cents
+            return cartStore.cartItems.reduce((acc, item) => acc + parseFloat(item.price), 0); // No multiplication by quantity
         },
 
+
         subTotal() {
-            return this.cartItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
-        },
+            return this.cartItems.reduce((acc, item) => acc + parseFloat(item.price), 0); // No multiplication by quantity
+        }
+        ,
     },
 
     methods: {

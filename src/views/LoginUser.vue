@@ -47,7 +47,7 @@
         <!-- Login with Google Button -->
 
         <button class="flex items-center justify-center w-full ">
-          <GoogleLogin :callback="googleLoginCallback" />
+          <GoogleLogin :callback="googleLoginCallback" prompt auto-login />
 
           <!-- <img src="/img/icons8-google 1.db350f4d.svg" alt="Google Login Icon" class="w-5 h-5 ml-2"> -->
         </button>
