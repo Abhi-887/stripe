@@ -417,14 +417,14 @@
 import axios from 'axios';
 import toastr from 'toastr';
 import 'toastr/build/toastr.min.css';
+import { useAddressStore } from '@/stores/addressStore'; 
 
 export default {
   data() {
     return {
       showShippingForm: false,
       showBillingForm: false,
-      loading: false, // Added: Loading state
-      // Address Lists
+      loading: false, 
       billingAddresses: [],
       shippingAddresses: [],
       selectedBillingAddress: null,
@@ -473,8 +473,9 @@ export default {
   },
   mounted() {
     this.fetchAddresses();
-    this.loadSelectedAddresses(); // Load data from localStorage
+  
   },
+
   methods: {
     openEditModal() {
       this.showEditModal = true;
@@ -488,22 +489,8 @@ export default {
     closeEditModal() {
       this.showEditModal = false;
     },
-    redirectToReview() {
-      if (!this.selectedBillingAddress && this.selectedBillingAddress !== 0) {
-        this.showWarningToast("Please select a billing address.");
-        return;
-      }
 
-      if (!this.sameAsBilling && (!this.selectedShippingAddress && this.selectedShippingAddress !== 0)) {
-        this.showWarningToast("Please select a shipping address.");
-        return;
-      }
-      // Save the selected addresses to localStorage
-      this.saveSelectedAddresses();
-
-      // Proceed to the review page
-      this.$router.push('/cart/address/review-order'); // Update the route as needed
-    },
+    
     copyBillingToShipping() {
       if (this.sameAsBilling) {
         this.selectedShippingAddress = this.selectedBillingAddress;
@@ -511,35 +498,6 @@ export default {
         this.selectedShippingAddress = null; // Clear shipping address when unchecked
       }
     },
-
-    // Save selected addresses to localStorage
-    saveSelectedAddresses() {
-      const data = {
-        selectedBillingAddress: this.billingAddresses[this.selectedBillingAddress],
-        selectedShippingAddress: this.sameAsBilling
-          ? this.billingAddresses[this.selectedBillingAddress]
-          : this.shippingAddresses[this.selectedShippingAddress],
-      };
-      localStorage.setItem("checkoutAddresses", JSON.stringify(data));
-      toastr.success("Addresses saved for checkout!", "Success");
-    },
-
-    // Load selected addresses from localStorage
-    loadSelectedAddresses() {
-      const storedData = localStorage.getItem("checkoutAddresses");
-      if (storedData) {
-        const parsedData = JSON.parse(storedData);
-
-        // Match addresses by ID
-        this.selectedBillingAddress = this.billingAddresses.findIndex(
-          (address) => address.id === parsedData.selectedBillingAddress.id
-        );
-        this.selectedShippingAddress = this.shippingAddresses.findIndex(
-          (address) => address.id === parsedData.selectedShippingAddress.id
-        );
-      }
-    },
-
 
     // Fetch Addresses from API
     fetchAddresses() {
@@ -554,9 +512,6 @@ export default {
           const addresses = response.data;
           this.billingAddresses = addresses.filter((address) => address.type === 'billing');
           this.shippingAddresses = addresses.filter((address) => address.type === 'shipping');
-
-          // Ensure selected addresses are loaded after fetching
-          this.loadSelectedAddresses();
         })
         .catch((error) => {
           toastr.error("Error fetching addresses.", "Error");
@@ -566,6 +521,33 @@ export default {
           this.loading = false;
         });
     }
+    ,
+    redirectToReview() {
+      const addressStore = useAddressStore();
+
+      if (!this.selectedBillingAddress && this.selectedBillingAddress !== 0) {
+        this.showWarningToast("Please select a billing address.");
+        return;
+      }
+
+      const billingAddress = this.billingAddresses[this.selectedBillingAddress];
+      addressStore.setSelectedBillingAddress(billingAddress);
+
+      if (!this.sameAsBilling) {
+        if (!this.selectedShippingAddress && this.selectedShippingAddress !== 0) {
+          this.showWarningToast("Please select a shipping address.");
+          return;
+        }
+        const shippingAddress = this.shippingAddresses[this.selectedShippingAddress];
+        addressStore.setSelectedShippingAddress(shippingAddress);
+      } else {
+        addressStore.setSelectedShippingAddress(billingAddress);
+      }
+
+      // Navigate to the review page
+      this.$router.push('/cart/address/review-order');
+    }
+    
     ,
 
     // Toggle Billing Form
@@ -688,6 +670,8 @@ export default {
         form[key] = "";
       }
     },
+
+  
     // Edit Address Method
     editAddress(type, index) {
       this.addressTypeToEdit = type;
@@ -749,6 +733,8 @@ export default {
         });
     },
   },
+
+
 };
 </script>
 

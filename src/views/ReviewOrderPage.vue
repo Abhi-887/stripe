@@ -144,43 +144,48 @@
             <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
                 <!-- Left Section -->
                 <div class="col-span-2 p-10 bg-white border border-red-200 rounded-lg">
-                    <!-- Delivery Address -->
-                    <div>
-                        <div class="flex items-start justify-between">
-                            <div>
-                                <h2 class="text-lg font-semibold text-gray-700 nunito-sans-dark">Shipping Address</h2>
-                                <p id="shipping-name" class="mt-2 text-lg text-gray-700 nunito-sans-dark">Loading...</p>
-                                <div class="text-gray-700 text-md nunito-sans-light">
-                                    <p id="shipping-address">Loading...</p>
-                                    <p id="shipping-country">Loading...</p>
-                                    <p id="shipping-phone">Loading...</p>
-                                </div>
-                            </div>
-                            <a href="#" class="">
-                                <i class="fa-regular fa-pen-to-square"></i>
-                            </a>
-                        </div>
-                        <hr class="my-4">
-                    </div>
-
-                    <!-- Billing Address -->
-                    <div>
-                        <div class="flex items-start justify-between">
-                            <div>
-                                <h2 class="text-lg font-semibold text-gray-700 nunito-sans-dark">Billing Address</h2>
-                                <p id="billing-name" class="mt-2 text-lg text-gray-700 nunito-sans-dark">Loading...</p>
-                                <div class="text-gray-700 text-md nunito-sans-light">
-                                    <p id="billing-address">Loading...</p>
-                                    <p id="billing-country">Loading...</p>
-                                    <p id="billing-phone">Loading...</p>
-                                </div>
-                            </div>
-                            <a href="#" class="">
-                                <i class="fa-regular fa-pen-to-square"></i>
-                            </a>
-                        </div>
-                    </div>
+    <!-- Delivery Address -->
+    <div>
+        <div class="flex items-start justify-between">
+            <div>
+                <h2 class="text-lg font-semibold text-gray-700 nunito-sans-dark">Shipping Address</h2>
+                <p id="shipping-name" class="mt-2 text-lg text-gray-700 nunito-sans-dark">
+                    {{ shippingAddress ? `${shippingAddress.first_name} ${shippingAddress.last_name}` : 'Loading...' }}
+                </p>
+                <div class="text-gray-700 text-md nunito-sans-light">
+                    <p id="shipping-address">{{ shippingAddress?.address || 'Loading...' }}</p>
+                    <p id="shipping-country">{{ shippingAddress?.country || 'Loading...' }}</p>
+                    <p id="shipping-phone">{{ shippingAddress?.phone || 'Loading...' }}</p>
                 </div>
+            </div>
+            <a href="#" class="">
+                <i class="fa-regular fa-pen-to-square"></i>
+            </a>
+        </div>
+        <hr class="my-4">
+    </div>
+
+    <!-- Billing Address -->
+    <div>
+        <div class="flex items-start justify-between">
+            <div>
+                <h2 class="text-lg font-semibold text-gray-700 nunito-sans-dark">Billing Address</h2>
+                <p id="billing-name" class="mt-2 text-lg text-gray-700 nunito-sans-dark">
+                    {{ billingAddress ? `${billingAddress.first_name} ${billingAddress.last_name}` : 'Loading...' }}
+                </p>
+                <div class="text-gray-700 text-md nunito-sans-light">
+                    <p id="billing-address">{{ billingAddress?.address || 'Loading...' }}</p>
+                    <p id="billing-country">{{ billingAddress?.country || 'Loading...' }}</p>
+                    <p id="billing-phone">{{ billingAddress?.phone || 'Loading...' }}</p>
+                </div>
+            </div>
+            <a href="#" class="">
+                <i class="fa-regular fa-pen-to-square"></i>
+            </a>
+        </div>
+    </div>
+</div>
+
 
                 <!-- Right Section -->
                 <div class="flex flex-col">
@@ -196,20 +201,20 @@
                         </div>
 
                         <!-- VAT -->
-                        <!-- <div class="flex justify-between mb-2">
+                        <div class="flex justify-between mb-2">
                             <p class="text-lg text-gray-700 nunito-sans-light">VAT</p>
                             <p class="text-lg text-gray-700 nunito-sans-dark">
                                 ${{ vat.toFixed(2) }}
                             </p>
-                        </div> -->
+                        </div>
 
                         <!-- Delivery Charge -->
-                        <!-- <div class="flex justify-between mb-2">
+                        <div class="flex justify-between mb-2">
                             <p class="text-lg text-gray-700 nunito-sans-light">Delivery Charge</p>
                             <p class="text-lg text-gray-700 nunito-sans-dark">
                                 ${{ deliveryCharge.toFixed(2) }}
                             </p>
-                        </div> -->
+                        </div>
 
                         <hr class="my-4">
 
@@ -236,243 +241,363 @@
     </div>
 </template>
 <script>
-import axios from 'axios';
-import { useCartStore } from '@/stores/cart';
-import { loadStripe } from '@stripe/stripe-js';
+    import axios from 'axios';
+    import { useCartStore } from '@/stores/cart';
+    import { loadStripe } from '@stripe/stripe-js';
+    import { useAddressStore } from '@/stores/addressStore';
 
-export default {
-    computed: {
-        // Access cart items from the Pinia store
-        cartItems() {
-            const cartStore = useCartStore();
-            return cartStore.cartItems;
-        },
+    export default {
+        computed: {
+            // Access cart items from the Pinia store
+            cartItems() {
+                const cartStore = useCartStore();
+                return cartStore.cartItems;
+            },
 
-        // Calculate the total amount for cart (in cents, as Stripe requires the smallest currency unit)
-        totalAmount() {
-            const cartStore = useCartStore();
-            return cartStore.cartItems.reduce((acc, item) => acc + parseFloat(item.price), 0); // No multiplication by quantity
-        },
+            // Calculate the total amount for cart (in cents, as Stripe requires the smallest currency unit)
+            totalAmount() {
+                const cartStore = useCartStore();
+                return cartStore.cartItems.reduce((acc, item) => acc + parseFloat(item.price), 0); // No multiplication by quantity
+            },
 
 
-        subTotal() {
-            return this.cartItems.reduce((acc, item) => acc + parseFloat(item.price), 0); // No multiplication by quantity
-        }
-        ,
-    },
-
-    methods: {
-        // Fetch user data from API
-        fetchUserData(token) {
-            return axios.get('https://awa.gprlive.com/api/user', {
-                headers: {
-                    Authorization: `Bearer ${token}`
-                }
-            });
-        },
-
-        // Fetch cart data from API
-        fetchCartData(userId, token) {
-            return axios.get(`https://awa.gprlive.com/api/carts?user_id=${userId}`, {
-                headers: {
-                    Authorization: `Bearer ${token}`
-                }
-            });
-        },
-
-        // Fetch Stripe publishable key and create checkout session
-        async createCheckoutSession() {
-            try {
-                // Step 1: Retrieve the token from session storage
-                const token = sessionStorage.getItem('token');
-                console.log('Token from sessionStorage:', token); // Debug: Log token
-                if (!token) {
-                    console.warn('No token found in session storage.');
-                    return;
-                }
-
-                // Step 2: Fetch the Stripe publishable key
-                const response = await axios.get('https://awa.gprlive.com/api/stripe-key', {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                });
-                console.log('Stripe Key Response:', response.data); // Debug: Log the response
-
-                const { publishableKey } = response.data;
-                if (!publishableKey) {
-                    console.error('Publishable key not found.');
-                    return;
-                }
-
-                // Step 3: Initialize Stripe with the publishable key
-                const stripe = await loadStripe(publishableKey);
-                if (!stripe) {
-                    console.error('Failed to initialize Stripe.');
-                    return;
-                }
-                console.log('Stripe initialized successfully.');
-
-                // Step 4: Map cart data to Stripe's required format
-                const lineItems = this.cartItems.map(item => {
-                    console.log('Processing item:', item); // Debug: Log each cart item
-                    return {
-                        price_data: {
-                            currency: 'aud',  // Replace 'usd' with your currency (e.g., 'aud')
-                            product_data: {
-                                name: item.product_name, // Adjusted to match your cart data field
-                            },
-                            unit_amount: Math.round(parseFloat(item.price) * 100), // Convert price to cents
-                        },
-                        quantity: item.quantity || 1, // Default quantity to 1 if null
-                    };
-                });
-                console.log('Formatted Line Items:', lineItems); // Debug: Log formatted line items
-
-                // Step 5: Create the checkout session
-                const checkoutResponse = await axios.post('https://awa.gprlive.com/api/create-checkout-session', {
-                    line_items: lineItems, // Pass formatted line items
-                    totalAmount: this.totalAmount, // Pass total amount for backend validation
-                    userId: 1, // Use the actual user ID
-                }, {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                });
-                console.log('Checkout Session Response:', checkoutResponse.data); // Debug: Log backend response
-
-                const { sessionId } = checkoutResponse.data;
-                if (!sessionId) {
-                    console.error('Session ID not received from the backend.');
-                    return;
-                }
-
-                // Step 6: Redirect to Stripe Checkout
-                const result = await stripe.redirectToCheckout({ sessionId });
-                console.log('Stripe redirect result:', result); // Debug: Log redirect result
-                if (result.error) {
-                    console.error('Error redirecting to checkout:', result.error.message);
-                }
-            } catch (error) {
-                console.error('Error creating checkout session:', error.response?.data || error.message); // Debug: Log errors
+            subTotal() {
+                return this.cartItems.reduce((acc, item) => acc + parseFloat(item.price), 0); // No multiplication by quantity
             }
+            ,
+            vat() {
+                return 0; // No multiplication by quantity
+            },
+            deliveryCharge() {
+                return 10; // No multiplication by quantity
+            },
+            billingAddress() {
+        const addressStore = useAddressStore();
+        return addressStore.selectedBillingAddress;
+        },
+        shippingAddress() {
+        const addressStore = useAddressStore();
+        return addressStore.selectedShippingAddress;
+        },
         },
 
+        methods: {
+            // Fetch user data from API
+            fetchUserData(token) {
+                return axios.get('https://awa.gprlive.com/api/user', {
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    }
+                });
+            },
 
-        // Main method to handle the order confirmation and trigger Stripe checkout
-        confirmOrder() {
-            this.createCheckoutSession();
-        },
+            // Fetch cart data from API
+            fetchCartData(userId, token) {
+                return axios.get(`https://awa.gprlive.com/api/carts?user_id=${userId}`, {
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    }
+                });
+            },
 
-        // Main method to fetch user and cart data
-        async fetchCartDataHandler() {
+            // Fetch Stripe publishable key and create checkout session
+            // async createCheckoutSession() {
+            //     try {
+            //         // Step 1: Retrieve the token from session storage
+            //         const token = sessionStorage.getItem('token');
+            //         console.log('Token from sessionStorage:', token); // Debug: Log token
+            //         if (!token) {
+            //             console.warn('No token found in session storage.');
+            //             return;
+            //         }
+
+            //         // Step 2: Fetch the Stripe publishable key
+            //         const response = await axios.get('https://awa.gprlive.com/api/stripe-key', {
+            //             headers: {
+            //                 Authorization: `Bearer ${token}`,
+            //             },
+            //         });
+            //         console.log('Stripe Key Response:', response.data); // Debug: Log the response
+
+            //         const { publishableKey } = response.data;
+            //         if (!publishableKey) {
+            //             console.error('Publishable key not found.');
+            //             return;
+            //         }
+
+            //         // Step 3: Initialize Stripe with the publishable key
+            //         const stripe = await loadStripe(publishableKey);
+            //         if (!stripe) {
+            //             console.error('Failed to initialize Stripe.');
+            //             return;
+            //         }
+            //         console.log('Stripe initialized successfully.');
+
+            //         // Step 4: Map cart data to Stripe's required format
+            //         const lineItems = this.cartItems.map(item => {
+            //             console.log('Processing item:', item); // Debug: Log each cart item
+            //             return {
+            //                 price_data: {
+            //                     currency: 'aud',  // Replace 'usd' with your currency (e.g., 'aud')
+            //                     product_data: {
+            //                         name: item.product_name, // Adjusted to match your cart data field
+            //                     },
+            //                     unit_amount: Math.round(parseFloat(item.price) * 100), // Convert price to cents
+            //                 },
+            //                 // quantity:  1, // Default quantity to 1 if null
+            //             };
+            //         });
+            //         console.log('Formatted Line Items:', lineItems); // Debug: Log formatted line items
+
+            //         // Step 5: Create the checkout session
+            //         const checkoutResponse = await axios.post('https://awa.gprlive.com/api/create-checkout-session', {
+            //             line_items: lineItems, // Pass formatted line items
+            //             totalAmount: this.totalAmount, // Pass total amount for backend validation
+            //             userId: 1, // Use the actual user ID
+            //         }, {
+            //             headers: {
+            //                 Authorization: `Bearer ${token}`,
+            //             },
+            //         });
+            //         console.log('Checkout Session Response:', checkoutResponse.data); // Debug: Log backend response
+
+            //         const { sessionId } = checkoutResponse.data;
+            //         if (!sessionId) {
+            //             console.error('Session ID not received from the backend.');
+            //             return;
+            //         }
+
+            //         // Step 6: Redirect to Stripe Checkout
+            //         const result = await stripe.redirectToCheckout({ sessionId });
+            //         console.log('Stripe redirect result:', result); // Debug: Log redirect result
+            //         if (result.error) {
+            //             console.error('Error redirecting to checkout:', result.error.message);
+            //         }
+            //     } catch (error) {
+            //         console.error('Error creating checkout session:', error.response?.data || error.message); // Debug: Log errors
+            //     }
+            // },
+
+            async createCheckoutSession() {
+        try {
+            // Step 1: Retrieve the token from session storage
             const token = sessionStorage.getItem('token');
-            console.log('Token from sessionStorage (fetchCartDataHandler):', token); // Log the token
+            console.log('Token from sessionStorage:', token); // Debug: Log token
             if (!token) {
                 console.warn('No token found in session storage.');
                 return;
             }
 
-            try {
-                // Fetch user data
-                const userResponse = await this.fetchUserData(token);
-                console.log('User Data Response:', userResponse.data); // Log user data
-                const user = userResponse.data.user;
+            // Step 2: Fetch the Stripe publishable key
+            const response = await axios.get('https://awa.gprlive.com/api/stripe-key', {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+            console.log('Stripe Key Response:', response.data); // Debug: Log the response
 
-                if (!user || !user.id) {
-                    console.error('Invalid user data or user ID missing.');
-                    return;
-                }
-
-                // Fetch cart data
-                const cartResponse = await this.fetchCartData(user.id, token);
-                console.log('Cart Data Response:', cartResponse.data); // Log cart data
-                if (cartResponse && cartResponse.data && Array.isArray(cartResponse.data.data)) {
-                    const cartStore = useCartStore();
-                    cartStore.setCartData(cartResponse.data.data.map(item => ({
-                        ...item,
-                        quantity: item.quantity || 1,  // Ensure quantity is always set
-                    })));
-                } else {
-                    console.warn('No cart data available.');
-                }
-            } catch (error) {
-                console.error('Error fetching data:', error.response?.data || error.message);
+            const { publishableKey } = response.data;
+            if (!publishableKey) {
+                console.error('Publishable key not found.');
+                return;
             }
+
+            // Step 3: Initialize Stripe with the publishable key
+            const stripe = await loadStripe(publishableKey);
+            if (!stripe) {
+                console.error('Failed to initialize Stripe.');
+                return;
+            }
+            console.log('Stripe initialized successfully.');
+
+            // Step 4: Map cart data to Stripe's required format
+            const lineItems = this.cartItems.map(item => {
+                console.log('Processing item:', item); // Debug: Log each cart item
+                return {
+                    price_data: {
+                        currency: 'aud',  // Replace 'usd' with your currency (e.g., 'aud')
+                        product_data: {
+                            name: item.product_name, // Adjusted to match your cart data field
+                        },
+                        unit_amount: Math.round(parseFloat(item.price) * 100), // Convert price to cents
+                    },
+                };
+            });
+            console.log('Formatted Line Items:', lineItems); // Debug: Log formatted line items
+
+            // Step 5: Create the checkout session
+            const checkoutResponse = await axios.post('https://awa.gprlive.com/api/create-checkout-session', {
+                line_items: lineItems, // Pass formatted line items
+                totalAmount: this.totalAmount, // Pass total amount for backend validation
+                userId: 1, // Use the actual user ID
+            }, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+            console.log('Checkout Session Response:', checkoutResponse.data); // Debug: Log backend response
+
+            const { sessionId } = checkoutResponse.data;
+            if (!sessionId) {
+                console.error('Session ID not received from the backend.');
+                return;
+            }
+
+            // Step 6: Redirect to Stripe Checkout
+            const result = await stripe.redirectToCheckout({ sessionId });
+            console.log('Stripe redirect result:', result); // Debug: Log redirect result
+            if (result.error) {
+                console.error('Error redirecting to checkout:', result.error.message);
+            }
+
+            // Step 7: Handle payment success and send details to backend
+            // After payment is successful, send the payment details to your backend
+            // For example, call an API to handle payment success
+            await this.handlePaymentSuccess(checkoutResponse.data.sessionId, token);
+
+        } catch (error) {
+            console.error('Error creating checkout session:', error.response?.data || error.message); // Debug: Log errors
         }
     },
 
-    mounted() {
-        this.fetchCartDataHandler();
-    }
-};
-document.addEventListener("DOMContentLoaded", loadAddresses);
+    // Handle Payment Success and call backend API to store details
+    async handlePaymentSuccess(sessionId, token) {
+        try {
+            const response = await axios.post('https://awa.gprlive.com/api/payment-success', {
+                session_id: sessionId,  // Send session ID to backend
+                payment_intent_id: sessionId,  // Send the payment intent ID (you may get this from Stripe response)
+                userId: 1,  // Send the user ID (adjust as necessary)
+            }, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
 
-// Load selected addresses from API
-async function loadAddresses() {
-    try {
-        const billingAddressId = getQueryParam("billing_id");
-        const shippingAddressId = getQueryParam("shipping_id");
+            console.log('Payment Success API Response:', response.data);  // Log success message from backend
 
-        if (!billingAddressId) {
-            console.error("Billing address ID is missing in the query parameters.");
-            return;
+            // After successful payment processing, you can redirect the user to a confirmation page or show a success message
+            this.$router.push({ name: 'PaymentConfirmation' });
+
+        } catch (error) {
+            console.error('Error handling payment success:', error.response?.data || error.message);
         }
+    },
 
-        const [billingResponse, shippingResponse] = await Promise.all([
-            fetchAddressById(billingAddressId),
-            shippingAddressId ? fetchAddressById(shippingAddressId) : null,
-        ]);
-
-        // Update Billing Address
-        if (billingResponse) {
-            updateAddressUI("billing", billingResponse);
-        }
-
-        // Update Shipping Address
-        if (shippingResponse) {
-            updateAddressUI("shipping", shippingResponse);
-        }
-    } catch (error) {
-        console.error("Error fetching addresses:", error);
-    }
-}
-
-// Fetch address by ID
-async function fetchAddressById(addressId) {
-    try {
-        const response = await fetch(`https://awa.gprlive.com/api/addresses/${addressId}`, {
-            headers: {
-                Authorization: `Bearer ${sessionStorage.getItem("token")}`,
+            // Main method to handle the order confirmation and trigger Stripe checkout
+            confirmOrder() {
+                this.createCheckoutSession();
             },
-        });
 
-        if (!response.ok) {
-            throw new Error(`Failed to fetch address with ID ${addressId}`);
+            // Main method to fetch user and cart data
+            async fetchCartDataHandler() {
+                const token = sessionStorage.getItem('token');
+                console.log('Token from sessionStorage (fetchCartDataHandler):', token); // Log the token
+                if (!token) {
+                    console.warn('No token found in session storage.');
+                    return;
+                }
+
+                try {
+                    // Fetch user data
+                    const userResponse = await this.fetchUserData(token);
+                    console.log('User Data Response:', userResponse.data); // Log user data
+                    const user = userResponse.data.user;
+
+                    if (!user || !user.id) {
+                        console.error('Invalid user data or user ID missing.');
+                        return;
+                    }
+
+                    // Fetch cart data
+                    const cartResponse = await this.fetchCartData(user.id, token);
+                    console.log('Cart Data Response:', cartResponse.data); // Log cart data
+                    if (cartResponse && cartResponse.data && Array.isArray(cartResponse.data.data)) {
+                        const cartStore = useCartStore();
+                        cartStore.setCartData(cartResponse.data.data.map(item => ({
+                            ...item,
+                            quantity: item.quantity || 1,  // Ensure quantity is always set
+                        })));
+                    } else {
+                        console.warn('No cart data available.');
+                    }
+                } catch (error) {
+                    console.error('Error fetching data:', error.response?.data || error.message);
+                }
+            }
+        },
+
+        mounted() {
+            this.fetchCartDataHandler();
         }
+    };
 
-        return await response.json();
-    } catch (error) {
-        console.error(error);
-        return null;
-    }
-}
+    // document.addEventListener("DOMContentLoaded", loadAddresses);
 
-// Update the address information in the UI
-function updateAddressUI(type, address) {
-    document.querySelector(`#${type}-name`).textContent =
-        `${address.first_name} ${address.last_name}`;
-    document.querySelector(`#${type}-address`).textContent =
-        `${address.address}, ${address.city}, ${address.state}, ${address.postal_code}`;
-    document.querySelector(`#${type}-country`).textContent =
-        address.country;
-    document.querySelector(`#${type}-phone`).textContent =
-        address.phone || "No contact available";
-}
+    // // Load selected addresses from API
+    // async function loadAddresses() {
+    //     try {
+    //         const billingAddressId = getQueryParam("billing_id");
+    //         const shippingAddressId = getQueryParam("shipping_id");
 
-// Utility: Extract query parameter value
-function getQueryParam(param) {
-    const urlParams = new URLSearchParams(window.location.search);
-    return urlParams.get(param);
-}
+    //         if (!billingAddressId) {
+    //             console.error("Billing address ID is missing in the query parameters.");
+    //             return;
+    //         }
+
+    //         const [billingResponse, shippingResponse] = await Promise.all([
+    //             fetchAddressById(billingAddressId),
+    //             shippingAddressId ? fetchAddressById(shippingAddressId) : null,
+    //         ]);
+
+    //         // Update Billing Address
+    //         if (billingResponse) {
+    //             updateAddressUI("billing", billingResponse);
+    //         }
+
+    //         // Update Shipping Address
+    //         if (shippingResponse) {
+    //             updateAddressUI("shipping", shippingResponse);
+    //         }
+    //     } catch (error) {
+    //         console.error("Error fetching addresses:", error);
+    //     }
+    // }
+
+    // // Fetch address by ID
+    // async function fetchAddressById(addressId) {
+    //     try {
+    //         const response = await fetch(`https://awa.gprlive.com/api/addresses/${addressId}`, {
+    //             headers: {
+    //                 Authorization: `Bearer ${sessionStorage.getItem("token")}`,
+    //             },
+    //         });
+
+    //         if (!response.ok) {
+    //             throw new Error(`Failed to fetch address with ID ${addressId}`);
+    //         }
+
+    //         return await response.json();
+    //     } catch (error) {
+    //         console.error(error);
+    //         return null;
+    //     }
+    // }
+
+    // // Update the address information in the UI
+    // function updateAddressUI(type, address) {
+    //     document.querySelector(`#${type}-name`).textContent =
+    //         `${address.first_name} ${address.last_name}`;
+    //     document.querySelector(`#${type}-address`).textContent =
+    //         `${address.address}, ${address.city}, ${address.state}, ${address.postal_code}`;
+    //     document.querySelector(`#${type}-country`).textContent =
+    //         address.country;
+    //     document.querySelector(`#${type}-phone`).textContent =
+    //         address.phone || "No contact available";
+    // }
+
+    // // Utility: Extract query parameter value
+    // function getQueryParam(param) {
+    //     const urlParams = new URLSearchParams(window.location.search);
+    //     return urlParams.get(param);
+    // }
 </script>
